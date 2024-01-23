@@ -49,34 +49,45 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 app.post('/upload', upload.single('file'), (req, res) => {
-  const fileBuffer = req.file.buffer; // Access the file buffer
-  const filename = req.file.originalname;
+  try {
+    const fileBuffer = req.file.buffer; // Access the file buffer
+    const filename = req.file.originalname;
 
-  const uploadStream = bucket.openUploadStream(filename);
-  const id = uploadStream.id;
+    const uploadStream = bucket.openUploadStream(filename);
+    const id = uploadStream.id;
 
-  uploadStream.end(fileBuffer); // Write the file buffer to the stream
+    uploadStream.end(fileBuffer); // Write the file buffer to the stream
 
-  uploadStream.on('finish', () => {
-    res.json({ id: id, filename: filename });
-  });
+    uploadStream.on('finish', () => {
+      res.json({ id: id, filename: filename });
+    });
 
-  uploadStream.on('error', (error) => {
-    res.status(500).json({ error: 'Error uploading file to GridFS' });
-  });
+    uploadStream.on('error', (error) => {
+      res.status(500).json({ error: 'Error uploading file to GridFS' });
+    });
+  } catch (error) {
+    console.log(error);
+  }
+
 });
 
 app.get('/fileinfo/:fileId', (req, res) => {
-  const fileId = new ObjectId(req.params.fileId);
+  try {
+    const fileId = new ObjectId(req.params.fileId);
 
-  const downloadStream = bucket.openDownloadStream(fileId);
+    const downloadStream = bucket.openDownloadStream(fileId);
 
-  // Set appropriate headers
-  res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', 'inline; filename=example.pdf');
+    // Set appropriate headers
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'inline; filename=example.pdf');
 
-  // Pipe the file stream to the response
-  downloadStream.pipe(res);
+    // Pipe the file stream to the response
+    downloadStream.pipe(res);
+  }
+  catch (error) {
+    console.log(error);
+  }
+
 });
 
 app.get('/', (req, res) => {
