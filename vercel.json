@@ -1,7 +1,7 @@
 {
   "version": 2,
   "build": {
-    "timeout": 120 // Increase the timeout to a higher value, e.g., 120 seconds
+    "timeout": 120
   },
   "builds": [
     {
