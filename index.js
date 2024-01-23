@@ -7,6 +7,7 @@ const multer = require('multer');
 const morgan = require('morgan');
 const { GridFSBucket } = require('mongodb');
 const { ObjectId } = require('bson');
+const { Readable } = require('stream');
 
 // npm install multer@1.4.4-lts.1
 
@@ -50,16 +51,17 @@ const upload = multer({ storage });
 
 app.post('/upload', upload.single('file'), (req, res) => {
   try {
-    const fileBuffer = req.file.buffer; // Access the file buffer
+    const fileStream = new Readable();
+    fileStream.push(req.file.buffer); // Push the file buffer into the readable stream
+    fileStream.push(null); // Signal the end of the stream
+
     const filename = req.file.originalname;
-
     const uploadStream = bucket.openUploadStream(filename);
-    const id = uploadStream.id;
 
-    uploadStream.end(fileBuffer); // Write the file buffer to the stream
+    fileStream.pipe(uploadStream); // Pipe the file stream into the upload stream
 
     uploadStream.on('finish', () => {
-      res.json({ id: id, filename: filename });
+      res.json({ id: uploadStream.id, filename: filename });
     });
 
     uploadStream.on('error', (error) => {
