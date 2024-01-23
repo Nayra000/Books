@@ -34,6 +34,7 @@ mongoose
   })
   .catch((err) => {
     console.log('DB connection ERROR!!');
+    console.log(err);
   });
 
 const db = mongoose.connection;
