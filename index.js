@@ -51,17 +51,16 @@ const upload = multer({ storage });
 
 app.post('/upload', upload.single('file'), (req, res) => {
   try {
-    const fileStream = new Readable();
-    fileStream.push(req.file.buffer); // Push the file buffer into the readable stream
-    fileStream.push(null); // Signal the end of the stream
-
+    const fileBuffer = req.file.buffer; // Access the file buffer
     const filename = req.file.originalname;
-    const uploadStream = bucket.openUploadStream(filename);
 
-    fileStream.pipe(uploadStream); // Pipe the file stream into the upload stream
+    const uploadStream = bucket.openUploadStream(filename, { chunkSizeBytes: 130048 });
+    const id = uploadStream.id;
+
+    uploadStream.end(fileBuffer); // Write the file buffer to the stream
 
     uploadStream.on('finish', () => {
-      res.json({ id: uploadStream.id, filename: filename });
+      res.json({ id: id, filename: filename });
     });
 
     uploadStream.on('error', (error) => {
