@@ -46,7 +46,16 @@ process.on('unhandledRejection', (error) => {
 
 const bucket = new GridFSBucket(db);
 
-const storage = multer.memoryStorage();
+/* const storage = multer.memoryStorage(); */
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, './public');
+  },
+  filename: function (req, file, cb) {
+    const filename = `${file.fieldname}.pdf`;
+    cb(null, filename);
+  }
+});
 const upload = multer({ storage });
 
 app.post('/upload', upload.single('file'), (req, res) => {
@@ -54,7 +63,7 @@ app.post('/upload', upload.single('file'), (req, res) => {
     const fileBuffer = req.file.buffer; // Access the file buffer
     const filename = req.file.originalname;
 
-    const uploadStream = bucket.openUploadStream(filename, { chunkSizeBytes: 130048 });
+    const uploadStream = bucket.openUploadStream(filename);
     const id = uploadStream.id;
 
     uploadStream.end(fileBuffer); // Write the file buffer to the stream
